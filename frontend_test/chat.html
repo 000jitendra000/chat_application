@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>WebSocket Chat Test</title>
+</head>
+<body>
+    <h2>WebSocket Chat Test</h2>
+
+```
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>WebSocket Chat Test</title>
+</head>
+<body>
+    <h2>WebSocket Chat Test</h2>
+
+```
+<input id="username" placeholder="username" />
+<button onclick="connect()">Connect</button>
+<br><br>
+<input id="toUser" placeholder="send to username" />
+<br><br>
+
+<input id="messageInput" placeholder="message" />
+<button onclick="sendMessage()">Send</button>
+
+<pre id="log"></pre>
+
+<script>
+    let socket = null;
+
+    function log(msg) {
+        document.getElementById('log').textContent += msg + '\n';
+    }
+
+    function connect() {
+        const username = document.getElementById('username').value;
+        socket = new WebSocket(`ws://127.0.0.1:8000/ws/chat/${username}/`);
+
+        socket.onopen = () => log('WebSocket connected');
+        socket.onmessage = (e) => log('RECV: ' + e.data);
+        socket.onclose = () => log('WebSocket closed');
+    }
+
+    function sendMessage() {
+        const msg = document.getElementById('messageInput').value;
+        const toUser = document.getElementById('toUser').value;
+
+        socket.send(JSON.stringify({
+            to: toUser,
+            message: msg
+        }));
+    }
+</script>
+```
+
+</body>
+</html>
+
+```
+
+</body>
+</html>
