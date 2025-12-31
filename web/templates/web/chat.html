@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Freebirds Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+        :root {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --primary: #4f46e5;
+            --primary-soft: #eef2ff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar h4 {
+            margin: 0 0 12px;
+        }
+
+        #users div {
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        #users div:hover {
+            background: var(--primary-soft);
+        }
+
+        .sidebar button {
+            margin-top: auto;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            cursor: pointer;
+        }
+
+        /* Chat area */
+        .chat {
+            background: var(--card);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+
+        .header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        #status {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: linear-gradient(#f8fafc, #ffffff);
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .me {
+            margin-left: auto;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .other {
+            margin-right: auto;
+            background: #e5e7eb;
+            color: #111827;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing {
+            font-size: 12px;
+            color: var(--muted);
+            padding: 0 16px 6px;
+        }
+
+        .send-box {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            background: #fafafa;
+        }
+
+        .send-box input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-size: 14px;
+        }
+
+        .send-box input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-box button {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .send-box button:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: 100vh;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h4>Users</h4>
+        <div id="users"></div>
+        <hr>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat">
+        <div class="header">
+            <h3 id="title"></h3>
+            <span id="status"></span>
+        </div>
+
+        <div class="messages" id="messages"></div>
+        <div class="typing" id="typing"></div>
+
+        <div class="send-box">
+            <input id="message" placeholder="Type your message…" oninput="sendTyping()" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const token = localStorage.getItem('access_token');
+const username = localStorage.getItem('username');
+let activeUser = null;
+
+function loadHistory(user) {
+    fetch(`/api/chat/history/${user}/`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(messages => {
+        const box = document.getElementById('messages');
+        box.innerHTML = '';
+        messages.forEach(m => {
+            const div = document.createElement('div');
+            div.className = `msg ${m.sender === username ? 'me' : 'other'}`;
+            div.innerText = m.content;
+            box.appendChild(div);
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = '/';
+}
+
+if (!token || !username) window.location.href = '/';
+
+document.getElementById('title').innerText = `Logged in as ${username}`;
+
+const socket = new WebSocket(`ws://${window.location.host}/ws/chat/${username}/`);
+
+socket.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+
+    if (data.type === 'chat_message') {
+        addMessage(data.from === username ? 'me' : 'other', data.message);
+    }
+
+    if (data.type === 'typing') {
+        document.getElementById('typing').innerText = `${data.from} is typing…`;
+        setTimeout(() => document.getElementById('typing').innerText = '', 1000);
+    }
+};
+
+fetch('/api/accounts/users/', {
+    headers: { 'Authorization': 'Bearer ' + token }
+})
+.then(res => res.json())
+.then(users => {
+    const box = document.getElementById('users');
+    users.forEach(u => {
+        const div = document.createElement('div');
+        div.innerText = u;
+        div.onclick = () => {
+            activeUser = u;
+            document.getElementById('status').innerText = `Chatting with ${u}`;
+            loadHistory(u);
+        };
+        box.appendChild(div);
+    });
+});
+
+function addMessage(cls, text) {
+    const div = document.createElement('div');
+    div.className = `msg ${cls}`;
+    div.innerText = text;
+    const box = document.getElementById('messages');
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendMessage() {
+    if (!activeUser) {
+        alert('Select a user first');
+        return;
+    }
+    const message = document.getElementById('message').value;
+    socket.send(JSON.stringify({ to: activeUser, message }));
+    document.getElementById('message').value = '';
+}
+
+function sendTyping() {
+    if (!activeUser) return;
+    socket.send(JSON.stringify({ type: 'typing', to: activeUser }));
+}
+</script>
+
+</body>
+</html>

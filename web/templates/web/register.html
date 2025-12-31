@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Freebirds Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+        :root {
+            --bg: #ecfeff;
+            --card: #ffffff;
+            --primary: #16a34a;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --error: #dc2626;
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #ecfeff, #f8fafc);
+            color: var(--text);
+        }
+
+        .box {
+            width: 100%;
+            max-width: 380px;
+            background: var(--card);
+            padding: 28px;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            margin: 0 0 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        label {
+            font-size: 13px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 14px;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        button:hover {
+            opacity: 0.95;
+        }
+
+        .error {
+            color: var(--error);
+            text-align: center;
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>Create account</h2>
+
+    <label for="username">Username</label>
+    <input id="username" placeholder="Choose a username" />
+
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Choose a password" />
+
+    <button onclick="register()">Register</button>
+
+    <div class="error" id="error"></div>
+
+    <div class="footer">
+        Already have an account?
+        <a href="/">Login</a>
+    </div>
+</div>
+
+<script>
+function register() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    fetch('/api/accounts/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => {
+        if (res.status === 201) {
+            window.location.href = '/';
+        } else {
+            document.getElementById('error').innerText = 'Registration failed';
+        }
+    })
+    .catch(() => {
+        document.getElementById('error').innerText = 'Server error';
+    });
+}
+</script>
+
+</body>
+</html>

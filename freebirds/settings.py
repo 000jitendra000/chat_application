@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,10 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-DEBUG = os.environ.get("DJANGO_DEBUG") == "True"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -43,6 +47,7 @@ INSTALLED_APPS = [
     'channels',
     'accounts',
     'chat',
+    'web',
 ]
 
 MIDDLEWARE = [
@@ -154,3 +159,6 @@ CHANNEL_LAYERS = {
 
 
 AUTH_USER_MODEL = 'accounts.User'
+
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "login"
